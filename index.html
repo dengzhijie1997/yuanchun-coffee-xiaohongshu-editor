@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>远淳咖啡 - 小红书内容编辑器</title>
+    <style>
+        body {
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background-color: #f8f8f8;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #ff2e4d;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .instructions {
+            background-color: #fff8e6;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffcc00;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        /* 内容区域样式 */
+        .section-divider {
+            border-top: 1px dashed #ddd;
+            margin: 30px 0;
+            position: relative;
+        }
+        .section-divider::after {
+            content: attr(data-title);
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 0 15px;
+            font-weight: bold;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* 文本编辑区样式 */
+        .article-brief {
+            line-height: 1.6;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .article-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+        .article-content {
+            color: #444;
+        }
+        .hashtags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .hashtag {
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+        
+        /* 图片编辑区样式 */
+        .image-gallery {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+        .image-container {
+            width: 100%;
+            max-width: 500px;
+        }
+        .image-title {
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-title .edit-hint {
+            font-size: 12px;
+            color: #666;
+            margin-left: 10px;
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        /* 编辑样式 */
+        [contenteditable="true"] {
+            outline: none;
+            border: 1px dashed transparent;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+        [contenteditable="true"]:hover {
+            border-color: #ff2e4d;
+            background-color: rgba(255, 46, 77, 0.05);
+        }
+        [contenteditable="true"]:focus {
+            border-color: #ff2e4d;
+            background-color: rgba(255, 46, 77, 0.1);
+        }
+        
+        /* 上传区域样式 */
+        .upload-control {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .upload-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #ff2e4d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 5px;
+            transition: background-color 0.2s;
+        }
+        .upload-btn:hover {
+            background-color: #e01b3c;
+        }
+        .upload-label {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        /* 图片设计样式 */
+        #cover {
+            width: 375px;
+            height: 500px;
+            background-image: url('./assets/cover-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            border-radius: 8px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        #cover .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.7) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #cover .title {
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 15px;
+            line-height: 1.3;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        #cover .subtags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        #cover .tag {
+            display: inline-block;
+            background-color: white;
+            color: #ff2e4d;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        #cover .logo {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 65px;
+            filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));
+        }
+
+        #content1 {
+            width: 375px;
+            height: 500px;
+            background-color: #FFF8E1;
+            position: relative;
+            border-radius: 8px;
+            margin: 0 auto;
+            padding: 25px;
+            box-sizing: border-box;
+        }
+        #content1 .header {
+            margin-bottom: 20px;
+        }
+        #content1 .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        #content1 .subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+        #content1 .content-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #content1 .item {
+            display: flex;
+            margin-bottom: 16px;
+            align-items: flex-start;
+        }
+        #content1 .icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            background-color: #ff2e4d;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 12px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        #content1 .text {
+            flex-grow: 1;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        #content1 .logo {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 50px;
+        }
+
+        #content2 {
+            width: 375px;
+            height: 500px;
+            background-color: #E8F5E9;
+            position: relative;
+            border-radius: 8px;
+            margin: 0 auto;
+            padding: 25px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        #content2 .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #content2 .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        #content2 .data-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        #content2 .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #content2 .data-label {
+            font-size: 14px;
+            color: #555;
+        }
+        #content2 .data-value {
+            font-weight: bold;
+            color: #ff2e4d;
+        }
+        #content2 .highlight {
+            margin-top: 15px;
+            background-color: #ff2e4d;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        #content2 .logo {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 50px;
+        }
+        
+        /* 回到顶部按钮 */
+        .top-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #ff2e4d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .top-btn:hover {
+            background-color: #e01b3c;
+        }
+
+        /* 响应式布局 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .article-brief {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>☕️ 远淳咖啡 - 小红书内容编辑器</h1>
+        
+        <div class="instructions">
+            <p><strong>使用说明</strong>：这是一个小红书内容编辑系统。所有文字内容都可以直接点击编辑，您还可以上传自己的图片替换默认图片。修改完成后请截图保存图片。</p>
+        </div>
+        
+        <!-- 文案简短版 -->
+        <div class="article-brief">
+            <div class="article-title" contenteditable="true">☕️ 咖啡店新手避坑指南：我亏了8万才总结出的5个咖啡豆采购技巧！</div>
+            
+            <div class="article-content" contenteditable="true">
+                <p>刚开店那会儿，一腔热血想做最好的咖啡，结果豆子价格死贵，客人却说"一般"，每个月默默亏钱💸 转眼半年过去，账本一算——8万没了！</p>
+                
+                <p>原来咖啡行业有太多"不成文规则"，我们新手根本不知道：</p>
+                <ul>
+                    <li>⚠️ <strong>盲目追求大牌</strong>：国外知名品牌≠性价比，很多都在收智商税</li>
+                    <li>⚠️ <strong>忽视储存条件</strong>：高价买回的好豆子，错误储存一周就毁了</li>
+                    <li>⚠️ <strong>采购周期混乱</strong>：断货急单采购，价格比计划采购高30%+</li>
+                </ul>
+                
+                <p>经过一年摸索，我找到了解决方案：本土精品烘焙厂（如远淳）性价比更高、更懂中国消费者口味、提供本地服务支持。调整后，我的店铺每月增收¥14000！</p>
+            </div>
+            
+            <div class="hashtags">
+                <div class="hashtag" contenteditable="true">#咖啡店经营</div>
+                <div class="hashtag" contenteditable="true">#咖啡豆批发</div>
+                <div class="hashtag" contenteditable="true">#咖啡创业避坑</div>
+                <div class="hashtag" contenteditable="true">#精品咖啡</div>
+                <div class="hashtag" contenteditable="true">#远淳咖啡</div>
+            </div>
+        </div>
+        
+        <div class="section-divider" data-title="小红书图文设计"></div>
+        
+        <!-- 图片设计区 -->
+        <div class="image-gallery">
+            <!-- 封面设计 -->
+            <div class="image-container">
+                <div class="image-title">封面图 <span class="edit-hint">点击文字可编辑</span></div>
+                <div id="cover">
+                    <div class="overlay">
+                        <img class="logo" id="coverLogo" src="./assets/logo.png" alt="远淳咖啡">
+                        <div class="title" contenteditable="true">咖啡店新手避坑指南：我亏了8万才总结出的5个采购技巧！</div>
+                        <div class="subtags">
+                            <span class="tag" contenteditable="true">#咖啡创业</span>
+                            <span class="tag" contenteditable="true">#避坑指南</span>
+                            <span class="tag" contenteditable="true">#远淳咖啡</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="upload-control">
+                    <span class="upload-label">更换背景图片：</span>
+                    <input type="file" id="coverImage" accept="image/*" style="display: none;">
+                    <button class="upload-btn" onclick="document.getElementById('coverImage').click()">选择图片</button>
+                    
+                    <span class="upload-label" style="margin-top: 8px;">更换LOGO：</span>
+                    <input type="file" id="logoImage1" accept="image/*" style="display: none;">
+                    <button class="upload-btn" onclick="document.getElementById('logoImage1').click()">选择LOGO</button>
+                </div>
+            </div>
+            
+            <!-- 内容图1 -->
+            <div class="image-container">
+                <div class="image-title">内容图 1 <span class="edit-hint">点击文字可编辑</span></div>
+                <div id="content1">
+                    <div class="header">
+                        <div class="title" contenteditable="true">为什么90%的咖啡店都在赔钱？</div>
+                        <div class="subtitle" contenteditable="true">这些"不成文规则"新手根本不知道👇</div>
+                    </div>
+                    <ul class="content-list">
+                        <li class="item">
+                            <div class="icon">1</div>
+                            <div class="text" contenteditable="true"><strong>盲目追求大牌</strong>：国外知名品牌≠性价比，很多都在收智商税</div>
+                        </li>
+                        <li class="item">
+                            <div class="icon">2</div>
+                            <div class="text" contenteditable="true"><strong>忽视储存条件</strong>：高价买回的好豆子，错误储存一周就毁了</div>
+                        </li>
+                        <li class="item">
+                            <div class="icon">3</div>
+                            <div class="text" contenteditable="true"><strong>采购周期混乱</strong>：断货急单采购，价格比计划采购高30%+</div>
+                        </li>
+                        <li class="item">
+                            <div class="icon">4</div>
+                            <div class="text" contenteditable="true"><strong>忽视本地支持</strong>：遇到问题找不到人，只能自己硬着头皮解决</div>
+                        </li>
+                        <li class="item">
+                            <div class="icon">5</div>
+                            <div class="text" contenteditable="true"><strong>没有口味稳定性</strong>：顾客刚喜欢上就换豆，回头客就这样流失了</div>
+                        </li>
+                    </ul>
+                    <img class="logo" id="content1Logo" src="./assets/logo.png" alt="远淳咖啡">
+                </div>
+                <div class="upload-control">
+                    <span class="upload-label">更换背景颜色：</span>
+                    <input type="color" id="content1Color" value="#FFF8E1" style="vertical-align: middle;">
+                    
+                    <span class="upload-label" style="margin-top: 8px;">更换LOGO：</span>
+                    <input type="file" id="logoImage2" accept="image/*" style="display: none;">
+                    <button class="upload-btn" onclick="document.getElementById('logoImage2').click()">选择LOGO</button>
+                </div>
+            </div>
+            
+            <!-- 内容图2 -->
+            <div class="image-container">
+                <div class="image-title">内容图 2 <span class="edit-hint">点击文字可编辑</span></div>
+                <div id="content2">
+                    <div class="header">
+                        <div class="title" contenteditable="true">转亏为盈的真实数据</div>
+                    </div>
+                    <div class="data-container">
+                        <div class="data-row">
+                            <div class="data-label" contenteditable="true">咖啡豆月均采购成本</div>
+                            <div class="data-value" contenteditable="true">↓4400元</div>
+                        </div>
+                        <div class="data-row">
+                            <div class="data-label" contenteditable="true">紧急加单比例</div>
+                            <div class="data-value" contenteditable="true">↓23%</div>
+                        </div>
+                        <div class="data-row">
+                            <div class="data-label" contenteditable="true">豆子浪费率</div>
+                            <div class="data-value" contenteditable="true">↓19%</div>
+                        </div>
+                        <div class="data-row">
+                            <div class="data-label" contenteditable="true">回头客占比</div>
+                            <div class="data-value" contenteditable="true">↑23%</div>
+                        </div>
+                        <div class="highlight" contenteditable="true">月增收益：¥14000！</div>
+                    </div>
+                    <img class="logo" id="content2Logo" src="./assets/logo.png" alt="远淳咖啡">
+                </div>
+                <div class="upload-control">
+                    <span class="upload-label">更换背景颜色：</span>
+                    <input type="color" id="content2Color" value="#E8F5E9" style="vertical-align: middle;">
+                    
+                    <span class="upload-label" style="margin-top: 8px;">更换LOGO：</span>
+                    <input type="file" id="logoImage3" accept="image/*" style="display: none;">
+                    <button class="upload-btn" onclick="document.getElementById('logoImage3').click()">选择LOGO</button>
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <p style="font-size: 13px; color: #666; margin-bottom: 10px;">编辑完成后，请直接截图保存各个图片</p>
+            <button class="top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">返回顶部</button>
+        </div>
+    </div>
+
+    <script>
+        // 为所有可编辑内容添加编辑提示
+        document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.addEventListener('focus', function() {
+                this.dataset.originalContent = this.innerHTML;
+            });
+            
+            el.addEventListener('blur', function() {
+                if (this.innerHTML.trim() === '') {
+                    this.innerHTML = this.dataset.originalContent;
+                }
+            });
+        });
+        
+        // 图片上传处理
+        document.getElementById('coverImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type.match('image.*')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('cover').style.backgroundImage = `url('${e.target.result}')`;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // LOGO上传处理
+        document.getElementById('logoImage1').addEventListener('change', function(e) {
+            handleLogoUpload(e, 'coverLogo');
+        });
+        
+        document.getElementById('logoImage2').addEventListener('change', function(e) {
+            handleLogoUpload(e, 'content1Logo');
+        });
+        
+        document.getElementById('logoImage3').addEventListener('change', function(e) {
+            handleLogoUpload(e, 'content2Logo');
+        });
+        
+        function handleLogoUpload(e, targetId) {
+            const file = e.target.files[0];
+            if (file && file.type.match('image.*')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById(targetId).src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // 背景颜色更改
+        document.getElementById('content1Color').addEventListener('input', function(e) {
+            document.getElementById('content1').style.backgroundColor = e.target.value;
+        });
+        
+        document.getElementById('content2Color').addEventListener('change', function(e) {
+            document.getElementById('content2').style.backgroundColor = e.target.value;
+        });
+    </script>
+</body>
+</html>
